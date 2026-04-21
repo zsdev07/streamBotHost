@@ -7,14 +7,13 @@ import (
 	"fmt"
 
 	"github.com/celestix/gotgproto"
-	"github.com/gotd/td/tg"
 	"go.uber.org/zap"
 )
 
 // FileFromDocID resolves a Telegram File by its document ID.
-// It queries Supabase for the message_id paired to this doc ID,
+// Queries Supabase for the message_id paired to this doc ID,
 // then fetches that single message directly — bots can do this,
-// unlike MessagesGetHistory which is user-only.
+// unlike MessagesGetHistory which is user-only (BOT_METHOD_INVALID).
 func FileFromDocID(ctx context.Context, client *gotgproto.Client, docID int64) (*types.File, error) {
 	log := Logger.Named("FileFromDocID")
 
@@ -28,7 +27,6 @@ func FileFromDocID(ctx context.Context, client *gotgproto.Client, docID int64) (
 
 	log.Debug("Cache miss — looking up message_id from Supabase", zap.Int64("docID", docID))
 
-	// Look up the message_id stored by worker.py
 	msgID, err := GetMessageIDForDocID(ctx, docID)
 	if err != nil {
 		return nil, fmt.Errorf("supabase lookup: %w", err)
@@ -41,7 +39,6 @@ func FileFromDocID(ctx context.Context, client *gotgproto.Client, docID int64) (
 		return nil, fmt.Errorf("FileFromMessage(%d): %w", msgID, err)
 	}
 
-	// Cache by doc ID too
 	_ = cache.GetCache().Set(cacheKey, file, 3600)
 
 	log.Info("Resolved docID via Supabase message_id",
