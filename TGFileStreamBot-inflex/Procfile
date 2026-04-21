@@ -1,1 +1,0 @@
-web: fsb run
