@@ -2,27 +2,31 @@ name: Unzip
 on: 
   push:
     paths:
-      - 'TGFileStreamBot-inflex.zip' # Only runs when the zip file is updated
-  workflow_dispatch: # Allows you to run it manually from the "Actions" tab
+      - 'neurocli.zip'
+  workflow_dispatch:
 
 jobs:
   unzip-and-commit:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Allows the action to push changes back
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Extract zip file
         run: |
-          unzip -o TGFileStreamBot-inflex.zip -d .
-          rm TGFileStreamBot-inflex.zip # Optional: removes zip after extraction
+          unzip -o neurocli.zip -d .
+          # Move everything from the subfolder to the root
+          mv TGFileStreamBot-inflex/* . 2>/dev/null || true
+          # Remove the now-empty folder and the zip
+          rm -rf TGFileStreamBot-inflex neurocli.zip
 
       - name: Commit and Push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git commit -m "Auto-unzipped" || echo "No changes to commit"
+          git commit -m "Auto-unzipped and moved to root" || echo "No changes to commit"
           git push
+          
