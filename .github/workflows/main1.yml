@@ -1,9 +1,7 @@
 name: Move Files to Root
 
 on:
-  push:
-    branches:
-      - main  # Or your default branch name
+  workflow_dispatch: # Allows you to run it manually from the "Actions" tab
 
 jobs:
   move-files:
@@ -12,11 +10,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Move files from folder to root
+      - name: Move all files (including hidden)
         run: |
-          # Move everything from the folder up one level
+          # Enable dotglob so * matches hidden files
+          shopt -s dotglob
+          
+          # Move everything to root
           mv TGFileStreamBot-inflex/* .
-          # Remove the empty folder
+          
+          # Now rmdir will work because the folder is truly empty
           rmdir TGFileStreamBot-inflex
           
       - name: Commit and Push Changes
@@ -24,6 +26,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Move files from TGFileStreamBot-inflex to root"
+          git commit -m "Move all files (including hidden) to root level"
           git push
           
